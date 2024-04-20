@@ -4,9 +4,9 @@ const parser = require("../Gramatica/gramatica");
 function interprete(contenido) {
     try {
         const ast = parser.parse(contenido);
-        const resultado = ast.Ejecutar();
-        console.log("Analisis finalizado 2");
-        return resultado;
+        ast.Ejecutar();
+        console.log("Análisis finalizado 2");
+        return ast.getConsola();
     }
     catch (error) {
         console.error(error);
@@ -20,7 +20,6 @@ app.use(cors());
 app.use(express.json());
 app.post('/interpretar', (req, res) => {
     const contenido = req.body.contenido;
-    console.log({ contenido });
     const interpretado = interprete(contenido);
     res.json({ resultado: interpretado });
 });

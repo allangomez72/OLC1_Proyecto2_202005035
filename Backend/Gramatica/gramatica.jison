@@ -29,23 +29,33 @@
 [0-9]+("."[0-9]+)\b     return 'DOUBLE';
 [0-9]+\b                return 'NUMBER';
 
-"EXEC"                  return 'EXEC';
-"print"                 return 'PRINT';
-"println"               return 'PRINTLN';
+"EXECUTE"                  return 'EXEC';
+"cout"                 return 'PRINT';
+"<<"               return 'COUTPRINT';
+"endl"                  return 'ENDL';
 "true"                  return 'TRUE';
 "false"                 return 'FALSE';
-"number"                return 'TNUMBER';
-"string"                return 'TSTRING';
+"int"                return 'TNUMBER';
+"std::string"                return 'TSTRING';
 "char"                  return 'TCHAR';
 "bool"                  return 'TBOOL';
 "double"                return 'TDOUBLE';
+//sentencias ciclicas
+"do"                   return 'DO';
 "while"                 return 'WHILE';
 "break"                 return 'BREAK';
+"continue"              return 'CONTINUE';
+"return"                return 'RETURN';
+"for"                  return 'FOR';
+
 //Instrucciones de control
 "if"                    return 'IF';
 "else"                  return 'ELSE';
 "{"                     return 'LLAVEIZQ';
 "}"                     return 'LLAVEDER';
+"switch"                return 'SWITCH';
+"case"                  return 'CASE';
+"default"               return 'DEFAULT';
 
 ([a-zA-z])[a-zA-Z0-9_]* return 'ID';
 
@@ -142,8 +152,8 @@ logicos
         | NOT expresion                 { $$ =  new Logico(null,$2,OpLogico.NOT,0,0);}
 ;
 
-fn_print: PRINT PARIZQ expresion PARDER { $$ = new Print($3,false,0,0)}
-        | PRINTLN PARIZQ expresion PARDER { $$ = new Print($3,true,0,0)}
+fn_print: PRINT COUTPRINT expresion { $$ = new Print($3,false,0,0)}
+        | PRINT COUTPRINT expresion COUTPRINT ENDL{ $$ = new Print($3,true,0,0)}
 ;
 // Bloque de instrucciones
 bloque

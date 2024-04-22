@@ -11,14 +11,16 @@ class Print extends Instruccion_1.Instruccion {
     }
     interpretar(contexto, consola) {
         const res = this.expresion.interpretar(contexto);
+        let valorImpirmir = res.valor;
+        valorImpirmir = valorImpirmir.replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\r/g, "\r");
         if (res.tipo == Resultado_1.TipoDato.BOOLEANO) {
             res.valor == res.valor ? "true" : "false";
         }
         if (this.salto) {
-            consola.push(res.valor + "\n");
+            consola.push(valorImpirmir + "\n");
         }
         else {
-            consola.push(res.valor + "");
+            consola.push(valorImpirmir + "");
         }
         return null;
     }

@@ -19,12 +19,12 @@ export class AST {
        });
     }
     public getConsola(){
-        console.log(this.consola)
+        console.log(this.consola,"Consola")
         let salid = ""
         for (let index = 0; index < this.consola.length; index++) {
             salid += this.consola[index].toString();
         }
-        console.log(salid)
+        console.log(salid,"Salida")
         return salid
     }
 }

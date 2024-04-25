@@ -1,0 +1,106 @@
+ini : instrucciones EOF;
+
+instrucciones : instrucciones instruccion
+              | instruccion;
+
+instruccion : fn_print ';'
+            | declaracion ';'
+            | ciclo_while ';'
+            | asignacion ';'
+            | inst_break ';'
+            | llamada_funcion ';'
+            | fn_funcion ';'
+            | execute ';'
+            | nativas ';'
+            | fn_if
+            | fn_switch
+            | ciclo_do_while
+            | ciclo_for;
+
+expresion : '-' expresion %prec UMINUS
+          | expresion '+' expresion
+          | expresion '-' expresion
+          | expresion '*' expresion
+          | expresion '/' expresion
+          | relacionales
+          | logicos
+          | NUMBER
+          | DOUBLE
+          | TRUE
+          | FALSE
+          | CADENA
+          | ID
+          | '(' expresion ')'
+          | nativas;
+
+relacionales : expresion '==' expresion
+              | expresion '!=' expresion
+              | expresion '<' expresion
+              | expresion '<=' expresion
+              | expresion '>' expresion
+              | expresion '>=' expresion;
+
+logicos : expresion '&&' expresion
+        | expresion '||' expresion
+        | '!' expresion;
+
+fn_print : 'PRINT' 'COUTPRINT' expresion
+         | 'PRINT' 'COUTPRINT' expresion 'COUTPRINT' 'ENDL';
+
+bloque : '{' instrucciones '}';
+
+fn_if : 'IF' '(' expresion ')' bloque
+      | 'IF' '(' expresion ')' bloque 'ELSE' bloque;
+
+declaracion : tipos ID '=' expresion;
+
+asignacion : ID '=' expresion;
+
+ciclo_while : 'WHILE' '(' expresion ')' bloque;
+
+inst_break : 'BREAK';
+
+fn_funcion : tipos ID '(' ')' bloque
+           | tipos ID '(' listaparametros ')' bloque;
+
+listaparametros : parametros
+                 | listaparametros ',' parametros;
+
+llamada_funcion : ID '(' ')'
+                | ID '(' lista_expresiones ')';
+
+lista_expresiones : expresion
+                   | lista_expresiones ',' expresion;
+
+execute : 'EXEC' llamada_funcion;
+
+nativas : 'TOLOWER' '(' expresion ')'
+        | 'TOUPPER' '(' expresion ')';
+
+tipos : 'TNUMBER'
+      | 'TDOUBLE'
+      | 'TSTRING'
+      | 'TBOOL'
+      | 'TCHAR'
+      | 'TVOID';
+
+ciclo_for : 'FOR' '(' expresionfor ';' expresion ';' expresionfor ')' bloque;
+
+expresionfor : declaracion
+             | asignacion
+             | expresion;
+
+ciclo_do_while : 'DO' bloque 'WHILE' '(' expresion ')' ';';
+
+fn_switch : 'SWITCH' '(' expresion ')' '{' listacasos '}';
+
+listacasos : bloquecase
+           | bloquecase casedefault
+           | casedefault;
+
+bloquecase : bloquecase case
+           | case;
+
+case : 'CASE' expresion ':' instrucciones;
+
+casedefault : 'DEFAULT' ':' instrucciones;

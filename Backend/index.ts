@@ -1,4 +1,5 @@
 import { Request, Response } from "express"
+import { TablaSimbolo } from "./src/Tablas/TablaSimbolos"
 
 const parser = require("../Gramatica/gramatica")
 

@@ -114,7 +114,8 @@
 %left 'IGUAL','DISTINTO','MENOR','MENORIGUAL','MAYOR','MAYORIGUAL'
 %left 'MAS', 'RES'
 %left 'MUL','DIV'
-%right UMINUS 
+%right UMINUS
+
 
 // Inicio de gramática
 %start ini

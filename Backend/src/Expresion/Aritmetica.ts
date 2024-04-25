@@ -56,6 +56,18 @@ export class Aritmetica extends Expresion{
              throw Error("tipo dato no valido")
            }
             return {valor: resultadoIzq.valor/resultadoDer.valor,tipo:dominante}
+        }else if (this.Operacion == OpAritmetica.POTENCIA){
+            const dominante = POTENCIA[resultadoIzq.tipo][resultadoDer.tipo];
+            if (dominante == TipoDato.NULO) {
+                throw Error("Tipo de dato no válido");
+            }
+            return { valor: Math.pow(resultadoIzq.valor, resultadoDer.valor), tipo: dominante };
+        } else if(this.Operacion == OpAritmetica.MODULO){
+            const dominante = MODULO[resultadoIzq.tipo][resultadoDer.tipo];
+            if (dominante == TipoDato.NULO) {
+                throw Error("Tipo de dato no válido");
+            }
+            return { valor: resultadoIzq.valor % resultadoDer.valor, tipo: dominante };
         }
         return {valor:null,tipo:TipoDato.NULO}
     }
@@ -90,4 +102,20 @@ const DIVISION = [
     [TipoDato.NULO ,TipoDato.NULO ,TipoDato.NULO ,TipoDato.NULO ,TipoDato.NULO ],
     [TipoDato.DOUBLE ,TipoDato.DOUBLE ,TipoDato.NULO ,TipoDato.NULO ,TipoDato.NULO ],
     [TipoDato.NULO ,TipoDato.NULO ,TipoDato.NULO ,TipoDato.NULO ,TipoDato.NULO ],
+]
+
+const POTENCIA = [
+    [TipoDato.NUMBER, TipoDato.DOUBLE, TipoDato.NULO, TipoDato.NULO, TipoDato.NULO],
+    [TipoDato.DOUBLE, TipoDato.DOUBLE, TipoDato.NULO, TipoDato.NULO, TipoDato.NULO],
+    [TipoDato.NULO, TipoDato.NULO, TipoDato.NULO, TipoDato.NULO, TipoDato.NULO],
+    [TipoDato.NULO, TipoDato.NULO, TipoDato.NULO, TipoDato.NULO, TipoDato.NULO],
+    [TipoDato.NULO, TipoDato.NULO, TipoDato.NULO, TipoDato.NULO, TipoDato.NULO]
+]
+
+const MODULO = [
+    [TipoDato.DOUBLE, TipoDato.DOUBLE, TipoDato.NULO, TipoDato.NULO, TipoDato.NULO],
+    [TipoDato.DOUBLE, TipoDato.DOUBLE, TipoDato.NULO, TipoDato.NULO, TipoDato.NULO],
+    [TipoDato.NULO, TipoDato.NULO, TipoDato.NULO, TipoDato.NULO, TipoDato.NULO],
+    [TipoDato.NULO, TipoDato.NULO, TipoDato.NULO, TipoDato.NULO, TipoDato.NULO],
+    [TipoDato.NULO, TipoDato.NULO, TipoDato.NULO, TipoDato.NULO, TipoDato.NULO]
 ]

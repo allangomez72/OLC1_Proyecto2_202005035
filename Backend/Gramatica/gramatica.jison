@@ -16,6 +16,7 @@
     const {Asignacion} = require("../dist/src/Instruccion/Asignacion");
     const {FN_IF} = require("../dist/src/Instruccion/Control/IF");
     const {Break} = require("../dist/src/Instruccion/Control/Break");
+    const {Continue} = require("../dist/src/Instruccion/Control/Continue");
     const {CWhile} = require("../dist/src/Instruccion/Ciclos/While");
     const {CDoWhile} = require("../dist/src/Instruccion/Ciclos/Dowhile");
     const {CFor} = require("../dist/src/Instruccion/Ciclos/CFor");
@@ -81,6 +82,8 @@
 "-"                     return 'RES';
 "*"                     return 'MUL';
 "/"                     return 'DIV';
+"pow"                   return 'POTENCIA';
+"%"                     return 'MODULO';
 ";"                     return 'PYC';
 "."                     return 'PUNTO';
 // Relacionales
@@ -119,7 +122,8 @@
 %left 'AND'
 %left 'IGUAL','DISTINTO','MENOR','MENORIGUAL','MAYOR','MAYORIGUAL'
 %left 'MAS', 'RES'
-%left 'MUL','DIV'
+%left 'MUL','DIV','MODULO'
+%right 'POTENCIA'
 %right 'INCREMENTO','DECREMENTO'
 %right UMINUS
 %left 'PARIZQ' 
@@ -150,44 +154,46 @@ instruccion:  fn_print PYC              { $$ = $1;}
             | fn_if                     { $$ = $1;}
             | ciclo_for              { $$ = $1;}
             | ciclo_dowhile         { $$ = $1;}
+            | inst_continue           { $$ = $1;}
 ;
 // Para sitetisar un dato, se utiliza $$
-expresion: RES expresion %prec UMINUS   { $$ = new Aritmetica(new Primitivo(0,0,0),$2,OpAritmetica.RESTA,0,0);} 
-        | expresion MAS expresion      { $$ = new Aritmetica($1,$3,OpAritmetica.SUMA,0,0);}
-        | expresion RES expresion       { $$ = new Aritmetica($1,$3,OpAritmetica.RESTA,0,0);}
-        | expresion MUL expresion       { $$ =  new Aritmetica($1,$3,OpAritmetica.PRODUCTO,0,0);}
-        | expresion DIV expresion       { $$ =  new Aritmetica($1,$3,OpAritmetica.DIVISION,0,0);}
+expresion: RES expresion %prec UMINUS   { $$ = new Aritmetica(new Primitivo(0,0,0),$2,OpAritmetica.RESTA,@1.first_line,@1.first_column);} 
+        | expresion MAS expresion      { $$ = new Aritmetica($1,$3,OpAritmetica.SUMA,@1.first_line,@1.first_column);}
+        | expresion RES expresion       { $$ = new Aritmetica($1,$3,OpAritmetica.RESTA,@1.first_line,@1.first_column);}
+        | expresion MUL expresion       { $$ =  new Aritmetica($1,$3,OpAritmetica.PRODUCTO,@1.first_line,@1.first_column);}
+        | expresion DIV expresion       { $$ =  new Aritmetica($1,$3,OpAritmetica.DIVISION,@1.first_line,@1.first_column);}    
+        | expresion POTENCIA expresion  { $$ =  new Aritmetica($1,$3,OpAritmetica.POTENCIA,@1.first_line,@1.first_column);}
+        | expresion MODULO expresion    { $$ =  new Aritmetica($1,$3,OpAritmetica.MODULO,@1.first_line,@1.first_column);}
         | relacionales                   { $$ = $1;}
         | logicos                   { $$ = $1;}
-        | NUMBER                        { $$ = new Primitivo($1,TipoDato.NUMBER,0,0); }
-        | DOUBLE                        { $$ =  new Primitivo($1,TipoDato.DOUBLE,0,0); }
-        | TRUE                        { $$ =  new Primitivo($1,TipoDato.BOOLEANO,0,0); }
-        | FALSE                        { $$ =  new Primitivo($1,TipoDato.BOOLEANO,0,0); }
-        | CADENA                        { $$ =  new Primitivo($1,TipoDato.STRING,0,0); }
+        | NUMBER                        { $$ = new Primitivo($1,TipoDato.NUMBER,@1.first_line,@1.first_column); }
+        | DOUBLE                        { $$ =  new Primitivo($1,TipoDato.DOUBLE,@1.first_line,@1.first_column); }
+        | TRUE                        { $$ =  new Primitivo($1,TipoDato.BOOLEANO,@1.first_line,@1.first_column); }
+        | FALSE                        { $$ =  new Primitivo($1,TipoDato.BOOLEANO,@1.first_line,@1.first_column); }
+        | CADENA                        { $$ =  new Primitivo($1,TipoDato.STRING,@1.first_line,@1.first_column); }
         | ID                            { $$ = new Acceso($1, @1.first_line, @1.first_column);}
         | PARIZQ expresion PARDER        { $$ = $2;}
-        | nativas                        { $$ = $1;}
         | incremento                     { $$ = $1;}
         | decremento                     { $$ = $1;}
 ;
 
 relacionales
-        : expresion IGUAL expresion       { $$ =  new Relacional($1,$3,OpRelacional.IGUAL,0,0);}
-        | expresion DISTINTO expresion    { $$ =  new Relacional($1,$3,OpRelacional.DISTINTO,0,0);}
-        | expresion MENOR expresion       { $$ =  new Relacional($1,$3,OpRelacional.MENOR,0,0);}
-        | expresion MENORIGUAL expresion  { $$ =  new Relacional($1,$3,OpRelacional.MENORIGUAL,0,0);}
-        | expresion MAYOR expresion       { $$ =  new Relacional($1,$3,OpRelacional.MAYOR,0,0);}
-        | expresion MAYORIGUAL expresion  { $$ =  new Relacional($1,$3,OpRelacional.MAYORIGUAL,0,0);}
+        : expresion IGUAL expresion       { $$ =  new Relacional($1,$3,OpRelacional.IGUAL,@1.first_line,@1.first_column);}
+        | expresion DISTINTO expresion    { $$ =  new Relacional($1,$3,OpRelacional.DISTINTO,@1.first_line,@1.first_column);}
+        | expresion MENOR expresion       { $$ =  new Relacional($1,$3,OpRelacional.MENOR,@1.first_line,@1.first_column);}
+        | expresion MENORIGUAL expresion  { $$ =  new Relacional($1,$3,OpRelacional.MENORIGUAL,@1.first_line,@1.first_column);}
+        | expresion MAYOR expresion       { $$ =  new Relacional($1,$3,OpRelacional.MAYOR,@1.first_line,@1.first_column);}
+        | expresion MAYORIGUAL expresion  { $$ =  new Relacional($1,$3,OpRelacional.MAYORIGUAL,@1.first_line,@1.first_column);}
 ;
 
 logicos
-        : expresion AND expresion       { $$ =  new Logico($1,$3,OpLogico.AND,0,0);}
-        | expresion OR  expresion       { $$ =  new Logico($1,$3,OpLogico.OR,0,0);}
-        | NOT expresion                 { $$ =  new Logico(null,$2,OpLogico.NOT,0,0);}
+        : expresion AND expresion       { $$ =  new Logico($1,$3,OpLogico.AND,@1.first_line,@1.first_column);}
+        | expresion OR  expresion       { $$ =  new Logico($1,$3,OpLogico.OR,@1.first_line,@1.first_column);}
+        | NOT expresion                 { $$ =  new Logico(null,$2,OpLogico.NOT,@1.first_line,@1.first_column);}
 ;
 
-fn_print: PRINT COUTPRINT expresion { $$ = new Print($3,false,0,0)}
-        | PRINT COUTPRINT expresion COUTPRINT ENDL{ $$ = new Print($3,true,0,0)}
+fn_print: PRINT COUTPRINT expresion { $$ = new Print($3,false,@1.first_line,@1.first_column)}
+        | PRINT COUTPRINT expresion COUTPRINT ENDL{ $$ = new Print($3,true,@1.first_line,@1.first_column)}
 ;
 // Bloque de instrucciones
 bloque
@@ -196,9 +202,9 @@ bloque
 ;
 // Sentencia de control
 fn_if
-        : IF PARIZQ expresion PARDER bloque                     { $$ = new FN_IF($3,$5,null,0,0);}
-        | IF PARIZQ expresion PARDER bloque ELSE bloque         { $$ = new FN_IF($3,$5,$7,0,0);}
-        | IF PARIZQ expresion PARDER bloque ELSE fn_if          { $$ = new FN_IF($3,$5,$7,0,0);}
+        : IF PARIZQ expresion PARDER bloque                     { $$ = new FN_IF($3,$5,null,@1.first_line,@1.first_column);}
+        | IF PARIZQ expresion PARDER bloque ELSE bloque         { $$ = new FN_IF($3,$5,$7,@1.first_line,@1.first_column);}
+        | IF PARIZQ expresion PARDER bloque ELSE fn_if          { $$ = new FN_IF($3,$5,$7,@1.first_line,@1.first_column);}
 ;
 
 case
@@ -226,6 +232,12 @@ fn_switch
 
 nativas
         : TOLOWER PARIZQ expresion PARDER  { console.log('Esto es lo de expresion: ',$2) }
+        | TOUPPER PARIZQ expresion PARDER
+        | ROUND PARIZQ expresion PARDER
+        | expresion PUNTO LENGTH PARIZQ PARDER
+        | TYPEOF PARIZQ expresion PARDER
+        | TOSTRING PARIZQ expresion PARDER
+        | expresion PUNTO CSTR PARIZQ PARDER
 ;
 
 // Tipos
@@ -267,6 +279,10 @@ ciclo_dowhile
 
 inst_break
         : BREAK                                {$$ = new Break(@1.first_line,@1.first_column)}
+;
+
+inst_continue
+        : CONTINUE                             {$$ = new Continue(@1.first_line,@1.first_column)}
 ;
 
 fn_funcion

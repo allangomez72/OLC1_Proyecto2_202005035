@@ -2,12 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AST = void 0;
 const TablaSimbolo_1 = require("./Contexto/TablaSimbolo");
-const Primitivo_1 = require("./Expresion/Primitivo");
-const Resultado_1 = require("./Expresion/Resultado");
 const Declaracion_1 = require("./Instruccion/Definiciones/Declaracion");
 const Funcion_1 = require("./Instruccion/Definiciones/Funcion");
 const Execute_1 = require("./Instruccion/Execute");
-const Print_1 = require("./Instruccion/Print");
 class AST {
     constructor(instrucciones) {
         this.instrucciones = instrucciones;
@@ -16,28 +13,25 @@ class AST {
         this.contadorExec = 0;
     }
     Ejecutar() {
-        // Primera pasada
+        // Primera pasada: Ejecutar funciones y declaraciones
         this.instrucciones.forEach(instruccion => {
-            if (instruccion instanceof Funcion_1.Funcion
-                || instruccion instanceof Declaracion_1.Declaracion) {
+            if (instruccion instanceof Funcion_1.Funcion || instruccion instanceof Declaracion_1.Declaracion) {
                 instruccion.interpretar(this.contextoGlobal, this.consola);
             }
         });
-        // Segunda pasada
+        // Segunda pasada: Ejecutar Execute
         this.instrucciones.forEach(instruccion => {
             if (instruccion instanceof Execute_1.Execute) {
-                if (this.contadorExec > 0) {
-                    const print = new Print_1.Print(new Primitivo_1.Primitivo("Ya existe una función Exec", Resultado_1.TipoDato.STRING, 0, 0), true, 0, 0);
-                    print.interpretar(this.contextoGlobal, this.consola);
-                    return;
-                }
                 instruccion.interpretar(this.contextoGlobal, this.consola);
                 this.contadorExec++;
             }
-            else if (!(instruccion instanceof Funcion_1.Funcion)
-                && !(instruccion instanceof Declaracion_1.Declaracion)) {
-                const print = new Print_1.Print(new Primitivo_1.Primitivo("Esta instruccion debe estar en una función", Resultado_1.TipoDato.STRING, 0, 0), true, 0, 0);
-                print.interpretar(this.contextoGlobal, this.consola);
+        });
+        // Tercera pasada: Ejecutar instrucciones fuera de las funciones
+        this.instrucciones.forEach(instruccion => {
+            if (!(instruccion instanceof Funcion_1.Funcion)
+                && !(instruccion instanceof Declaracion_1.Declaracion)
+                && !(instruccion instanceof Execute_1.Execute)) {
+                instruccion.interpretar(this.contextoGlobal, this.consola);
             }
         });
     }

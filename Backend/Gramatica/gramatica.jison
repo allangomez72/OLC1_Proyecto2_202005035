@@ -1,6 +1,8 @@
 %{
     // Importar librerías
     const {Aritmetica} = require("../dist/src/Expresion/Aritmetica");
+    const {Decremento} = require("../dist/src/Expresion/Decremento");
+    const {Incremento} = require("../dist/src/Expresion/Incremento");
     const {toLower} = require("../dist/src/Expresion/FuncNativas/toLower");
     const {Relacional} = require("../dist/src/Expresion/Relacionales");
     const {Logico} = require("../dist/src/Expresion/Logicos");
@@ -15,6 +17,8 @@
     const {FN_IF} = require("../dist/src/Instruccion/Control/IF");
     const {Break} = require("../dist/src/Instruccion/Control/Break");
     const {CWhile} = require("../dist/src/Instruccion/Ciclos/While");
+    const {CDoWhile} = require("../dist/src/Instruccion/Ciclos/Dowhile");
+    const {CFor} = require("../dist/src/Instruccion/Ciclos/CFor");
     const {Declaracion} = require("../dist/src/Instruccion/Definiciones/Declaracion");
     const {Funcion} = require("../dist/src/Instruccion/Definiciones/Funcion");
 
@@ -71,6 +75,8 @@
 ":"                     return 'DOSPUNTOS'
 ","                     return 'COMA';
 // Aritmeticas
+"++"                    return 'INCREMENTO';
+"--"                    return 'DECREMENTO';
 "+"                     return 'MAS';
 "-"                     return 'RES';
 "*"                     return 'MUL';
@@ -114,7 +120,9 @@
 %left 'IGUAL','DISTINTO','MENOR','MENORIGUAL','MAYOR','MAYORIGUAL'
 %left 'MAS', 'RES'
 %left 'MUL','DIV'
+%right 'INCREMENTO','DECREMENTO'
 %right UMINUS
+%left 'PARIZQ' 
 
 
 // Inicio de gramática
@@ -140,6 +148,8 @@ instruccion:  fn_print PYC              { $$ = $1;}
             | execute PYC               { $$ = $1;}
             | nativas PYC               { $$ = $1;}
             | fn_if                     { $$ = $1;}
+            | ciclo_for              { $$ = $1;}
+            | ciclo_dowhile         { $$ = $1;}
 ;
 // Para sitetisar un dato, se utiliza $$
 expresion: RES expresion %prec UMINUS   { $$ = new Aritmetica(new Primitivo(0,0,0),$2,OpAritmetica.RESTA,0,0);} 
@@ -157,6 +167,8 @@ expresion: RES expresion %prec UMINUS   { $$ = new Aritmetica(new Primitivo(0,0,
         | ID                            { $$ = new Acceso($1, @1.first_line, @1.first_column);}
         | PARIZQ expresion PARDER        { $$ = $2;}
         | nativas                        { $$ = $1;}
+        | incremento                     { $$ = $1;}
+        | decremento                     { $$ = $1;}
 ;
 
 relacionales
@@ -212,6 +224,9 @@ fn_switch
         : SWITCH PARIZQ expresion PARDER listacasos
 ;
 
+nativas
+        : TOLOWER PARIZQ expresion PARDER  { console.log('Esto es lo de expresion: ',$2) }
+;
 
 // Tipos
 tipos
@@ -233,10 +248,23 @@ asignacion
         : ID ASIGNACION expresion               {$$ = new Asignacion($1,$3,@1.first_line,@1.first_column)}
 ;
 
+incremento
+        : ID INCREMENTO         { $$ = new Incremento($1,@1.first_line,@1.first_column) }
+;
+
+decremento
+        : ID DECREMENTO         {$$ = new Decremento($1,@1.first_line,@1.first_column) }
+;
+
 //centencias ciclicas
 ciclo_while
         : WHILE PARIZQ expresion PARDER bloque    {$$ = new CWhile($3,$5, @1.first_line, @1.first_column)} 
 ;
+
+ciclo_dowhile
+        : DO bloque WHILE PARIZQ expresion PARDER  {$$ = new CDoWhile($5,$2, @1.first_line, @1.first_column)}
+;
+
 inst_break
         : BREAK                                {$$ = new Break(@1.first_line,@1.first_column)}
 ;
@@ -269,8 +297,15 @@ execute
         : EXEC llamada_funcion          { $$ = new Execute($2,@1.first_line,@1.first_column)}
 ;
 
+foriterador
+        : asignacion { $$ = $1; }
+        | incremento { $$ = $1; }
+        | decremento { $$ = $1; }
+;
+
+
 ciclo_for
-        : FOR PARIZQ expresionfor PYC expresion PYC 
+        : FOR PARIZQ expresionfor PYC expresion PYC foriterador PARDER bloque { $$ = new CFor($3,$5,$7,$9,@1.first_line,@1.first_column) }
 ;
 
 expresionfor
@@ -278,6 +313,3 @@ expresionfor
         | asignacion    { $$ = $1; }
 ;
 
-nativas
-        : TOLOWER PARIZQ expresion PARDER  { console.log('Esto es lo de expresion: ',$2);}
-;

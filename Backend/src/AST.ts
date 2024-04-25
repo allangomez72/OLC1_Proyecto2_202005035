@@ -20,34 +20,32 @@ export class AST {
         this.contadorExec = 0;
     }
 
-    public Ejecutar(){
-       // Primera pasada
-
-       this.instrucciones.forEach(instruccion => {
-            if (instruccion instanceof Funcion
-                || instruccion instanceof Declaracion
-            ){
-                instruccion.interpretar(this.contextoGlobal,this.consola)
+    public Ejecutar() {
+        // Primera pasada: Ejecutar funciones y declaraciones
+        this.instrucciones.forEach(instruccion => {
+            if (instruccion instanceof Funcion || instruccion instanceof Declaracion) {
+                instruccion.interpretar(this.contextoGlobal, this.consola);
             }
-       });
-        // Segunda pasada
-       this.instrucciones.forEach(instruccion => {
-            if(instruccion instanceof Execute){
-                if(this.contadorExec>0) {
-                const print = new Print(new Primitivo("Ya existe una función Exec",TipoDato.STRING,0,0),true,0,0)
-                print.interpretar(this.contextoGlobal,this.consola)
-                return
-                }
-                instruccion.interpretar(this.contextoGlobal,this.consola)
-                this.contadorExec++
-            }else if (!(instruccion instanceof Funcion)
-                && !(instruccion instanceof Declaracion)){
-                const print = new Print(new Primitivo("Esta instruccion debe estar en una función",TipoDato.STRING,0,0),true,0,0)
-                print.interpretar(this.contextoGlobal,this.consola)
+        });
+    
+        // Segunda pasada: Ejecutar Execute
+        this.instrucciones.forEach(instruccion => {
+            if (instruccion instanceof Execute) {
+                instruccion.interpretar(this.contextoGlobal, this.consola);
+                this.contadorExec++;
             }
-       });
-
+        });
+    
+        // Tercera pasada: Ejecutar instrucciones fuera de las funciones
+        this.instrucciones.forEach(instruccion => {
+            if (!(instruccion instanceof Funcion)
+                && !(instruccion instanceof Declaracion)
+                && !(instruccion instanceof Execute)) {
+                instruccion.interpretar(this.contextoGlobal, this.consola);
+            }
+        });
     }
+    
     public getConsola(){
         console.log(this.consola)
         let salid = ""

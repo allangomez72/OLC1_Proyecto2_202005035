@@ -1,4 +1,5 @@
-import { Simbolo } from "../Contexto/Simbolo";
+import { Simbolo, tipoSimbolo } from "../Contexto/Simbolo";
+import { TipoDato } from "../Expresion/Resultado";
 
 export class TablaSimbolo{
     private tabla:Map<string,Simbolo>
@@ -7,8 +8,8 @@ export class TablaSimbolo{
         this.tabla = new Map();
     }
 
-    public guardarSimbolo(id: string, valor: any, tipo: string, tipoSimbolo: tipoSimbolo): void {
-        const simbolo = new Simbolo(id, valor, tipo, tipoSimbolo);
+    public guardarSimbolo(id: string, valor: any, tipo: TipoDato, tiposimbolo: tipoSimbolo): void {
+        const simbolo = new Simbolo(id, valor,tipo, tiposimbolo);
         this.tabla.set(id, simbolo);
     }
 

@@ -14,7 +14,7 @@ export class Contexto {
         const existe = this.tablaSimbolos.has(id);
         if (!existe){
             this.tablaSimbolos.set(id, new Simbolo(id,valor,tipo,tipoSimbolo))
-            console.log("Variable guardada")
+            console.log("Variable guardada-----", valor)
             return 
         }
         throw new Error("La variable ya fue declarada")

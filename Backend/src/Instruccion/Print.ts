@@ -6,25 +6,21 @@ import { Instruccion } from "./Instruccion";
 export class Print extends Instruccion{
     private expresion;
     private salto;
-    constructor(expresion:Expresion,salto:string,linea:number,columna:number){
+    constructor(expresion:Expresion,salto:boolean,linea:number,columna:number){
         super(linea,columna)
         this.expresion=expresion
         this.salto = salto
     }
     public interpretar(contexto:Contexto,consola: string[]): null {
         const res = this.expresion.interpretar(contexto)
-        let valorImpirmir = res.valor;
-
-        valorImpirmir = valorImpirmir.replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\r/g, "\r");
-
         if (res.tipo == TipoDato.BOOLEANO){
             res.valor == res.valor?"true":"false"
         }
         if (this.salto){
-        consola.push(valorImpirmir+"\n")
+        consola.push(res.valor+"\n")
         }
         else{
-        consola.push(valorImpirmir+"")
+        consola.push(res.valor+"")
         }
         return null
     }

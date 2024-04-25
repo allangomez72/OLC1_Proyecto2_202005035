@@ -1,6 +1,7 @@
 %{
     // Importar librerías
     const {Aritmetica} = require("../dist/src/Expresion/Aritmetica");
+    const {toLower} = require("../dist/src/Expresion/FuncNativas/toLower");
     const {Relacional} = require("../dist/src/Expresion/Relacionales");
     const {Logico} = require("../dist/src/Expresion/Logicos");
     const {Primitivo} = require("../dist/src/Expresion/Primitivo");
@@ -8,11 +9,15 @@
     const {OpAritmetica,OpRelacional,OpLogico,TipoDato} = require("../dist/src/Expresion/Resultado");
     const {Print} = require("../dist/src/Instruccion/Print");
     const {Bloque} = require("../dist/src/Instruccion/Bloque");
+    const {Llamada} = require("../dist/src/Instruccion/Llamada");
+    const {Execute} = require("../dist/src/Instruccion/Execute");
     const {Asignacion} = require("../dist/src/Instruccion/Asignacion");
     const {FN_IF} = require("../dist/src/Instruccion/Control/IF");
     const {Break} = require("../dist/src/Instruccion/Control/Break");
     const {CWhile} = require("../dist/src/Instruccion/Ciclos/While");
     const {Declaracion} = require("../dist/src/Instruccion/Definiciones/Declaracion");
+    const {Funcion} = require("../dist/src/Instruccion/Definiciones/Funcion");
+
     const {AST} = require("../dist/src/AST");
 %}
 
@@ -39,6 +44,7 @@
 "std::string"                return 'TSTRING';
 "char"                  return 'TCHAR';
 "bool"                  return 'TBOOL';
+"void"                 return 'TVOID';
 "double"                return 'TDOUBLE';
 //sentencias ciclicas
 "do"                   return 'DO';
@@ -62,12 +68,15 @@
 // signos
 "("                     return 'PARIZQ';
 ")"                     return 'PARDER';
+":"                     return 'DOSPUNTOS'
+","                     return 'COMA';
 // Aritmeticas
 "+"                     return 'MAS';
 "-"                     return 'RES';
 "*"                     return 'MUL';
 "/"                     return 'DIV';
 ";"                     return 'PYC';
+"."                     return 'PUNTO';
 // Relacionales
 "=="                    return 'IGUAL';
 "!="                    return 'DISTINTO';
@@ -80,6 +89,14 @@
 "&&"                    return 'AND';
 "||"                    return 'OR';
 "!"                     return 'NOT';
+//nativas
+"tolower"               return 'TOLOWER';
+"toupper"               return 'TOUPPER';
+"round"                 return 'ROUND';
+"length"                return 'LENGTH';
+"typeof"                return 'TYPEOF'
+"std::toString"         return 'TOSTRING';
+"c_str"                 return 'CSTR';
 // Cadenas             "asdfasdfasf"
 \"[^\"]*\"				{ yytext = yytext.substr(1,yyleng-2); return 'CADENA'; }
 
@@ -112,12 +129,15 @@ instrucciones: instrucciones instruccion    {  $1.push($2); $$ = $1;}
             | instruccion                   { $$ =  [$1];}
 ;
 
-instruccion: EXEC expresion PYC         { $$ =  $2;}
-            | fn_print PYC               { $$ = $1;}
+instruccion:  fn_print PYC              { $$ = $1;}
             | declaracion PYC           { $$ = $1;}
             | ciclo_while PYC           { $$ = $1;}
-            | asignacion PYC           { $$ = $1;}
-            | inst_break PYC           { $$ = $1;}
+            | asignacion PYC            { $$ = $1;}
+            | inst_break PYC            { $$ = $1;}
+            | llamada_funcion PYC       { $$ = $1;}
+            | fn_funcion PYC            { $$ = $1;}
+            | execute PYC               { $$ = $1;}
+            | nativas PYC               { $$ = $1;}
             | fn_if                     { $$ = $1;}
 ;
 // Para sitetisar un dato, se utiliza $$
@@ -135,6 +155,7 @@ expresion: RES expresion %prec UMINUS   { $$ = new Aritmetica(new Primitivo(0,0,
         | CADENA                        { $$ =  new Primitivo($1,TipoDato.STRING,0,0); }
         | ID                            { $$ = new Acceso($1, @1.first_line, @1.first_column);}
         | PARIZQ expresion PARDER        { $$ = $2;}
+        | nativas                        { $$ = $1;}
 ;
 
 relacionales
@@ -162,10 +183,35 @@ bloque
 ;
 // Sentencia de control
 fn_if
-        : IF PARIZQ expresion PARDER bloque     { $$ = new FN_IF($3,$5,null,0,0);}
-        | IF PARIZQ expresion PARDER bloque ELSE bloque     { $$ = new FN_IF($3,$5,$7,0,0);}
-        | IF PARIZQ expresion PARDER bloque ELSE fn_if     { $$ = new FN_IF($3,$5,$7,0,0);}
+        : IF PARIZQ expresion PARDER bloque                     { $$ = new FN_IF($3,$5,null,0,0);}
+        | IF PARIZQ expresion PARDER bloque ELSE bloque         { $$ = new FN_IF($3,$5,$7,0,0);}
+        | IF PARIZQ expresion PARDER bloque ELSE fn_if          { $$ = new FN_IF($3,$5,$7,0,0);}
 ;
+
+case
+        : CASE expresion DOSPUNTOS instrucciones
+;
+
+bloquecase
+        : bloquecase case
+        | case 
+;
+
+casedefault
+        : DEFAULT DOSPUNTOS instrucciones
+;
+
+listacasos
+        : LLAVEIZQ bloquecase casedefault LLAVEDER
+        | LLAVEIZQ bloquecase LLAVEDER
+        | LLAVEIZQ casedefault LLAVEDER
+;
+
+fn_switch
+        : SWITCH PARIZQ expresion PARDER listacasos
+;
+
+
 // Tipos
 tipos
         : TNUMBER                       {$$ = TipoDato.NUMBER }
@@ -173,19 +219,64 @@ tipos
         | TSTRING                       {$$= TipoDato.STRING}
         | TBOOL                         {$$ = TipoDato.BOOLEANO}
         | TCHAR                         { $$ = TipoDato.CHAR}
+        | TVOID                         { $$ = TipoDato.VOID}
 ;
 
 // Declaracion
 declaracion
-        : tipos ID ASIGNACION expresion            {$$= new Declaracion($1,$2,$4,0,0);}
+        : tipos ID ASIGNACION expresion            {console.log('Estoy asignado el valor de ',$4);
+        $$= new Declaracion($1,$2,$4,0,0);}
 ;
 
 asignacion 
         : ID ASIGNACION expresion               {$$ = new Asignacion($1,$3,@1.first_line,@1.first_column)}
 ;
+
+//centencias ciclicas
 ciclo_while
         : WHILE PARIZQ expresion PARDER bloque    {$$ = new CWhile($3,$5, @1.first_line, @1.first_column)} 
 ;
 inst_break
         : BREAK                                {$$ = new Break(@1.first_line,@1.first_column)}
+;
+
+fn_funcion
+        :  tipos ID PARIZQ PARDER bloque        {$$ = new Funcion($1,$2,[],$5,@1.first_line,@1.first_column)}
+        | tipos ID PARIZQ listaparametros PARDER bloque         {$$ = new Funcion($1,$2,$4,$6,@1.first_line,@1.first_column)}
+;
+
+parametros
+        : tipos ID                    { $$ = ({id: $2, tipo: $1});}
+;
+
+listaparametros 
+        : listaparametros COMA parametros       { $1.push($3); $$ = $1;}
+        | parametros                            { $$ = [$1];}
+;
+
+llamada_funcion
+        : ID PARIZQ PARDER                      { $$ = new Llamada($1,[],@1.first_line,@1.first_column);}
+        | ID PARIZQ lista_expresiones PARDER    { $$ = new Llamada($1,$3,@1.first_line,@1.first_column);}
+;
+
+lista_expresiones
+        : lista_expresiones COMA expresion      { $1.push($3); $$ = $1;}
+        | expresion                             { $$ = [$1];}
+;
+
+execute 
+        : EXEC llamada_funcion          { $$ = new Execute($2,@1.first_line,@1.first_column)}
+;
+
+ciclo_for
+        : FOR PARIZQ expresionfor PYC expresion PYC 
+;
+
+expresionfor
+        : declaracion   { $$ = $1 }
+        | asignacion    { $$ = $1; }
+;
+
+nativas
+        : TOLOWER PARIZQ expresion PARDER  { console.log('Esto es lo de expresion: ',$2);}
 ;

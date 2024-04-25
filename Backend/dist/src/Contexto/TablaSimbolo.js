@@ -16,7 +16,7 @@ class Contexto {
         }
         throw new Error("La variable ya fue declarada");
     }
-    obtenerVariable(id) {
+    obtenerSimbolo(id) {
         let contexto_actual = this;
         while (contexto_actual != null) {
             const existe = contexto_actual.tablaSimbolos.has(id);
@@ -31,6 +31,13 @@ class Contexto {
     }
     actualizarSimbolo(id, valor) {
         this.tablaSimbolos.set(id, valor);
+    }
+    obtenerGlobal() {
+        let contexto = this;
+        while (contexto.padre != null) {
+            contexto = contexto.padre;
+        }
+        return contexto;
     }
 }
 exports.Contexto = Contexto;
